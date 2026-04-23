@@ -173,14 +173,20 @@ export default function WordCard({
   quizProgress = null,
   onSelectOption,
 }) {
-  const [revealed, setRevealed] = useState(false)
+  const previewMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('preview')
+  const [revealed, setRevealed] = useState(previewMode)
   const [notebookExpanded, setNotebookExpanded] = useState(false)
 
   useEffect(() => {
+    if (previewMode) {
+      setRevealed(true)
+      return undefined
+    }
+
     setRevealed(false)
     const timer = setTimeout(() => setRevealed(true), 700)
     return () => clearTimeout(timer)
-  }, [word?.id, quizCompleted])
+  }, [word?.id, quizCompleted, previewMode])
 
   useEffect(() => {
     setNotebookExpanded(false)
