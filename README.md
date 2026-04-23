@@ -2,6 +2,8 @@
 
 ![Preview do PP Pedro Palavras](./public/preview.png)
 
+[Acessar o projeto online](https://pdrbala.github.io/pedro-palavras-PP/)
+
 PP Pedro Palavras é um app de estudo diário feito para aprender palavras, conceitos e idiomas sem virar uma lista cansativa. A ideia é transformar revisão em um ritual curto: uma palavra por vez, progresso visível, categorias separadas e uma interface escura com cards em glassmorphism para deixar o estudo mais agradável.
 
 ## Objetivo
