@@ -515,6 +515,21 @@ export default function Home({
             </motion.div>
           )}
         </AnimatePresence>
+
+        <AnimatePresence>
+          {!focusMode && (
+            <motion.div
+              className="focus-hint"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.22, delay: 0.05 }}
+            >
+              <span className="focus-hint-key">F</span>
+              ativa o modo foco
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
