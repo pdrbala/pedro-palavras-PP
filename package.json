@@ -2,7 +2,7 @@
   "name": "pensapalavra",
   "private": true,
   "version": "0.1.0",
-  "description": "App de estudo diario de palavras, conceitos e idiomas com streaks, modo caderno, quiz e interface glassmorphism.",
+  "description": "App de estudo diário de palavras, conceitos e idiomas com streaks, modo caderno, quiz e interface glassmorphism.",
   "type": "module",
   "scripts": {
     "dev": "vite",
