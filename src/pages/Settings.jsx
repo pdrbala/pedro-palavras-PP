@@ -47,7 +47,7 @@ export default function Settings({ defaultTrack, setDefaultTrack, theme, setThem
                 className={`track-option ${defaultTrack === 'frances' ? 'active-fr' : ''}`}
                 onClick={() => setDefaultTrack('frances')}
               >
-                Frances
+                Francês
               </button>
               <button
                 className={`track-option ${defaultTrack === 'russo' ? 'active-ru' : ''}`}
@@ -90,7 +90,7 @@ export default function Settings({ defaultTrack, setDefaultTrack, theme, setThem
           <div className="settings-row">
             <div>
               <p className="settings-label">Banco de palavras</p>
-              <p className="settings-desc">Sociologia: 5 conceitos. Frances: 10 palavras. Russo: 10 palavras.</p>
+              <p className="settings-desc">Sociologia: 5 conceitos. Francês: 10 palavras. Russo: 10 palavras.</p>
             </div>
             <span style={{ fontSize: 12, color: 'var(--text-3)' }}>25 no total</span>
           </div>
@@ -156,7 +156,7 @@ export default function Settings({ defaultTrack, setDefaultTrack, theme, setThem
         >
           <p className="about-logo">PedroPalavras</p>
           <p className="about-version">v0.1.0</p>
-          <p className="about-desc">Um vocabulario diario para estudar sociologia, frances e russo.</p>
+          <p className="about-desc">Um vocabulario diario para estudar sociologia, francês e russo.</p>
         </motion.div>
       </div>
     </div>

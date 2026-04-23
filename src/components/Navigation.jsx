@@ -1,9 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion'
 
+const iconBase = import.meta.env.BASE_URL
+
 const tabs = [
-  { id: 'home', label: 'Hoje', icon: '/icons/bootstrap/house-door.svg' },
-  { id: 'history', label: 'Historico', icon: '/icons/bootstrap/clock-history.svg' },
-  { id: 'settings', label: 'Config', icon: '/icons/bootstrap/gear.svg' },
+  { id: 'home', label: 'Hoje', icon: `${iconBase}icons/bootstrap/house-door.svg` },
+  { id: 'history', label: 'Historico', icon: `${iconBase}icons/bootstrap/clock-history.svg` },
+  { id: 'settings', label: 'Config', icon: `${iconBase}icons/bootstrap/gear.svg` },
 ]
 
 export default function Navigation({ page, setPage }) {

@@ -5,7 +5,7 @@ const spring = { type: 'spring', stiffness: 500, damping: 38 }
 
 const TRACKS = [
   { id: 'sociologia', label: 'Sociologia', color: 'var(--soc)' },
-  { id: 'frances', label: 'Frances', color: 'var(--fr)' },
+  { id: 'frances', label: 'Francês', color: 'var(--fr)' },
   { id: 'russo', label: 'Russo', color: 'var(--ru)' },
 ]
 

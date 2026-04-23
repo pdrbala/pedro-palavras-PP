@@ -25,7 +25,7 @@ function getTrackMeta(track) {
     accent: isSociology ? 'var(--soc)' : isRussian ? 'var(--ru)' : 'var(--fr)',
     tagBg: isSociology ? 'var(--soc-light)' : isRussian ? 'var(--ru-light)' : 'var(--fr-light)',
     tagColor: isSociology ? 'var(--soc)' : isRussian ? 'var(--ru)' : 'var(--fr)',
-    trackLabel: isSociology ? 'Sociologia' : isRussian ? 'Russo' : 'Frances',
+    trackLabel: isSociology ? 'Sociologia' : isRussian ? 'Russo' : 'Francês',
   }
 }
 

@@ -21,7 +21,7 @@ function getTrackMeta(category) {
     accent: isSoc ? 'var(--soc)' : isRu ? 'var(--ru)' : 'var(--fr)',
     tagBg: isSoc ? 'var(--soc-light)' : isRu ? 'var(--ru-light)' : 'var(--fr-light)',
     tagColor: isSoc ? 'var(--soc)' : isRu ? 'var(--ru)' : 'var(--fr)',
-    label: isSoc ? 'Sociologia' : isRu ? 'Russo' : 'Frances',
+    label: isSoc ? 'Sociologia' : isRu ? 'Russo' : 'Francês',
   }
 }
 
@@ -288,7 +288,7 @@ export default function History({ wordStatus, streakData = {} }) {
         >
           {[
             { key: 'sociologia', label: 'Sociologia', accent: 'var(--soc)' },
-            { key: 'frances', label: 'Frances', accent: 'var(--fr)' },
+            { key: 'frances', label: 'Francês', accent: 'var(--fr)' },
             { key: 'russo', label: 'Russo', accent: 'var(--ru)' },
           ].map(({ key, label, accent }) => {
             const data = streakData[key] ?? { streak: 0, lastDate: null, longest: 0 }
@@ -372,7 +372,7 @@ export default function History({ wordStatus, streakData = {} }) {
           <div style={{ display: 'flex', background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 99, padding: 3, gap: 2 }}>
             <TabBtn value="all" current={trackFilter} onChange={setTrackFilter}>Todas</TabBtn>
             <TabBtn value="sociologia" current={trackFilter} onChange={setTrackFilter}>Sociologia</TabBtn>
-            <TabBtn value="frances" current={trackFilter} onChange={setTrackFilter}>Frances</TabBtn>
+            <TabBtn value="frances" current={trackFilter} onChange={setTrackFilter}>Francês</TabBtn>
             <TabBtn value="russo" current={trackFilter} onChange={setTrackFilter}>Russo</TabBtn>
           </div>
 
