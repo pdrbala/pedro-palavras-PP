@@ -164,32 +164,26 @@ function WordListCard({ entry, onClick, index }) {
 
   return (
     <motion.button
+      className="history-list-card"
       onClick={onClick}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ scale: 0.98, y: -2 }}
+      whileHover={{ scale: 0.985, y: -2 }}
       whileTap={{ scale: 0.97 }}
-      style={{
-        all: 'unset', cursor: 'pointer',
-        display: 'flex', flexDirection: 'column',
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
-        boxShadow: 'var(--shadow-sm)',
-        overflow: 'hidden',
-        textAlign: 'left',
-      }}
+      style={{ '--history-card-accent': meta.accent }}
     >
-      <div style={{ height: 3, background: meta.accent, flexShrink: 0 }} />
+      <div className="history-list-card-line" />
 
-      <div style={{ padding: '18px 20px 16px', flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{
-            fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
-            textTransform: 'uppercase', padding: '3px 8px',
-            borderRadius: 99, background: meta.tagBg, color: meta.tagColor,
-          }}>
+      <div className="history-list-card-body">
+        <div className="history-list-card-top">
+          <span
+            style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
+              textTransform: 'uppercase', padding: '3px 8px',
+              borderRadius: 99, background: meta.tagBg, color: meta.tagColor,
+            }}
+          >
             {meta.label}
           </span>
           {status && (
@@ -199,31 +193,31 @@ function WordListCard({ entry, onClick, index }) {
           )}
         </div>
 
-        <p style={{
-          fontFamily: 'var(--font-serif)',
-          fontSize: 22, fontWeight: 400, lineHeight: 1.1,
-          letterSpacing: '-0.02em', color: 'var(--text-1)',
-          marginBottom: 4,
-        }}>
+        <p className="history-list-card-title">
           {word.word}
         </p>
 
-        <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 10 }}>
+        <p className="history-list-card-author">
           {word.author}
         </p>
 
-        <p style={{
-          fontSize: 12, lineHeight: 1.6,
-          color: 'var(--text-2)',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}>
+        <p className="history-list-card-definition">
           {word.definition}
         </p>
       </div>
     </motion.button>
+  )
+}
+
+function TabBtn({ value, current, onChange, children }) {
+  return (
+    <button
+      className={`history-tab-btn ${current === value ? 'active' : ''}`}
+      onClick={() => onChange(value)}
+      type="button"
+    >
+      {children}
+    </button>
   )
 }
 
@@ -244,6 +238,9 @@ export default function History({ wordStatus, streakData = {} }) {
   const known = seenEntries.filter((e) => e.status === 'known').length
   const review = seenEntries.filter((e) => e.status === 'review').length
   const seen = seenEntries.filter((e) => e.status === 'seen').length
+  const completionRate = total > 0 ? Math.round((known / total) * 100) : 0
+  const activeTracks = ['sociologia', 'frances', 'russo'].filter((key) => (streakData[key]?.streak ?? 0) > 0).length
+  const bestLongest = Math.max(...['sociologia', 'frances', 'russo'].map((key) => streakData[key]?.longest ?? 0), 0)
 
   const filtered = seenEntries
     .filter((e) => trackFilter === 'all' || e.word.category === trackFilter)
@@ -255,36 +252,46 @@ export default function History({ wordStatus, streakData = {} }) {
       e.word.definition.toLowerCase().includes(search.toLowerCase())
     )
 
-  const TabBtn = ({ value, current, onChange, children }) => (
-    <button
-      onClick={() => onChange(value)}
-      style={{
-        border: 'none', cursor: 'pointer', padding: '6px 13px',
-        borderRadius: 99, fontSize: 12, fontWeight: 500,
-        fontFamily: 'var(--font-sans)',
-        transition: 'all 120ms',
-        background: current === value ? 'var(--accent-light)' : 'transparent',
-        color: current === value ? 'var(--accent)' : 'var(--text-3)',
-        boxShadow: current === value ? 'inset 0 0 0 1px var(--accent-mid)' : 'none',
-      }}
-    >
-      {children}
-    </button>
-  )
-
   return (
     <div className="page">
       <div className="container">
-        <div className="page-top">
-          <h2 className="page-title">Biblioteca</h2>
-          <p className="page-subtitle">Todas as palavras que voce ja encontrou.</p>
+        <div className="page-top history-hero">
+          <div className="history-hero-copy">
+            <p className="history-eyebrow">Arquivo vivo</p>
+            <div className="history-hero-head">
+              <div>
+                <h2 className="page-title">Biblioteca</h2>
+                <p className="page-subtitle history-subtitle">Todas as palavras que voce ja encontrou, revisou ou dominou.</p>
+              </div>
+              <span className="history-hero-pill">
+                {total > 0 ? `${completionRate}% dominado` : 'Comece hoje'}
+              </span>
+            </div>
+          </div>
+
+          <div className="history-overview-grid">
+            {[
+              { value: total, label: 'palavras vistas', tone: 'accent' },
+              { value: known, label: 'ja dominadas', tone: 'neutral' },
+              { value: bestLongest, label: 'melhor streak', tone: 'accent' },
+              { value: activeTracks, label: 'trilhas ativas', tone: 'neutral' },
+            ].map(({ value, label, tone }) => (
+              <div
+                key={label}
+                className={`history-overview-card ${tone === 'accent' ? 'accent' : ''}`}
+              >
+                <p className="history-overview-value">{value}</p>
+                <p className="history-overview-label">{label}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         <motion.div
+          className="history-streak-grid"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}
         >
           {[
             { key: 'sociologia', label: 'Sociologia', accent: 'var(--soc)' },
@@ -293,32 +300,18 @@ export default function History({ wordStatus, streakData = {} }) {
           ].map(({ key, label, accent }) => {
             const data = streakData[key] ?? { streak: 0, lastDate: null, longest: 0 }
             return (
-              <div key={key} style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                borderTop: `3px solid ${accent}`,
-                borderRadius: 'var(--radius-md)',
-                padding: '14px 16px',
-                boxShadow: 'var(--shadow-sm)',
-              }}>
-                <p style={{
-                  fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
-                  textTransform: 'uppercase', color: accent, marginBottom: 8,
-                }}>
+              <div key={key} className="history-streak-card" style={{ '--history-streak-accent': accent }}>
+                <p className="history-streak-label" style={{ color: accent }}>
                   {label}
                 </p>
-                <p style={{
-                  fontFamily: 'var(--font-serif)', fontSize: 30,
-                  fontWeight: 400, lineHeight: 1,
-                  color: 'var(--text-1)', letterSpacing: '-0.03em',
-                }}>
+                <p className="history-streak-value">
                   {data.streak}
                 </p>
-                <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>
+                <p className="history-streak-copy">
                   dias seguidos
                 </p>
                 {(data.longest ?? 0) > 0 && (
-                  <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 5 }}>
+                  <p className="history-streak-meta">
                     max. {data.longest}
                   </p>
                 )}
@@ -329,17 +322,18 @@ export default function History({ wordStatus, streakData = {} }) {
 
         {total > 0 && (
           <motion.div
+            className="history-metric-grid"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.06, duration: 0.35 }}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 24 }}
           >
             {[
               { n: total, label: 'vistas', color: 'var(--accent)', background: 'var(--accent-light)', borderColor: 'var(--accent-mid)' },
               { n: known, label: 'dominadas', color: 'var(--text-1)', background: 'var(--surface)', borderColor: 'var(--border)' },
               { n: review, label: 'revisar', color: 'var(--fr)', background: 'var(--fr-light)', borderColor: 'var(--fr)' },
+              { n: seen, label: 'anotadas', color: 'var(--text-2)', background: 'var(--bg-2)', borderColor: 'var(--border)' },
             ].map(({ n, label, color, background, borderColor }) => (
-              <div key={label} style={{ background, border: `1px solid ${borderColor}`, borderRadius: 'var(--radius-md)', padding: '14px 16px', boxShadow: 'var(--shadow-sm)' }}>
+              <div key={label} className="history-metric-card" style={{ background, borderColor }}>
                 <p style={{ fontFamily: 'var(--font-serif)', fontSize: 32, fontWeight: 400, lineHeight: 1, color, letterSpacing: '-0.03em' }}>
                   {n}
                 </p>
@@ -349,57 +343,53 @@ export default function History({ wordStatus, streakData = {} }) {
           </motion.div>
         )}
 
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08, duration: 0.35 }} style={{ position: 'relative', marginBottom: 12 }}>
+        <motion.div
+          className="history-toolbar"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08, duration: 0.35 }}
+        >
           <input
             type="text"
             placeholder="Buscar por palavra, autor ou definicao..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: '100%', padding: '11px 14px',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-md)',
-              fontFamily: 'var(--font-sans)', fontSize: 14,
-              color: 'var(--text-1)',
-              outline: 'none',
-              boxShadow: 'var(--shadow-sm)',
-            }}
+            className="history-search"
           />
-        </motion.div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.12 }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
-          <div style={{ display: 'flex', background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 99, padding: 3, gap: 2 }}>
-            <TabBtn value="all" current={trackFilter} onChange={setTrackFilter}>Todas</TabBtn>
-            <TabBtn value="sociologia" current={trackFilter} onChange={setTrackFilter}>Sociologia</TabBtn>
-            <TabBtn value="frances" current={trackFilter} onChange={setTrackFilter}>Francês</TabBtn>
-            <TabBtn value="russo" current={trackFilter} onChange={setTrackFilter}>Russo</TabBtn>
-          </div>
+          <div className="history-filter-row">
+            <div className="history-filter-pills">
+              <TabBtn value="all" current={trackFilter} onChange={setTrackFilter}>Todas</TabBtn>
+              <TabBtn value="sociologia" current={trackFilter} onChange={setTrackFilter}>Sociologia</TabBtn>
+              <TabBtn value="frances" current={trackFilter} onChange={setTrackFilter}>Francês</TabBtn>
+              <TabBtn value="russo" current={trackFilter} onChange={setTrackFilter}>Russo</TabBtn>
+            </div>
 
-          <div style={{ display: 'flex', background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 99, padding: 3, gap: 2 }}>
-            <TabBtn value="all" current={statusFilter} onChange={setStatusFilter}>Todas</TabBtn>
-            <TabBtn value="known" current={statusFilter} onChange={setStatusFilter}>Ja sei</TabBtn>
-            <TabBtn value="review" current={statusFilter} onChange={setStatusFilter}>Revisar</TabBtn>
+            <div className="history-filter-pills">
+              <TabBtn value="all" current={statusFilter} onChange={setStatusFilter}>Todas</TabBtn>
+              <TabBtn value="known" current={statusFilter} onChange={setStatusFilter}>Ja sei</TabBtn>
+              <TabBtn value="review" current={statusFilter} onChange={setStatusFilter}>Revisar</TabBtn>
+            </div>
           </div>
         </motion.div>
 
         {total === 0 ? (
-          <div className="empty-state">
-            <span className="empty-state-glyph">P</span>
+          <div className="empty-state history-empty-state">
+            <span className="empty-state-glyph">PP</span>
             <p className="empty-state-text">Nenhuma palavra vista ainda.<br />Volte para a tela inicial: a palavra do dia te espera.</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-state-glyph">P</span>
+          <div className="empty-state history-empty-state">
+            <span className="empty-state-glyph">PP</span>
             <p className="empty-state-text">Nenhuma palavra encontrada com esses filtros.</p>
           </div>
         ) : (
           <>
-            <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 12 }}>
-              {filtered.length} {filtered.length === 1 ? 'palavra' : 'palavras'}
+            <p className="history-results-meta">
+              {filtered.length} {filtered.length === 1 ? 'palavra' : 'palavras'} na selecao atual
             </p>
 
-            <motion.div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
+            <motion.div className="history-results-grid">
               {filtered.map((entry, i) => (
                 <WordListCard key={entry.word.id} entry={entry} index={i} onClick={() => setSelected(entry)} />
               ))}

@@ -33,6 +33,10 @@ function QuizOption({ option, accent, quizAnswered, quizSelection, onSelectOptio
   const isSelected = quizSelection === option.id
   const isWrongSelection = quizAnswered && isSelected && !option.isCorrect
   const showCorrect = quizAnswered && option.isCorrect
+  const feedbackLabel =
+    showCorrect ? 'Correta' :
+    isWrongSelection ? 'Sua' :
+    ''
 
   const borderColor =
     isWrongSelection ? 'var(--fr)' :
@@ -63,6 +67,7 @@ function QuizOption({ option, accent, quizAnswered, quizSelection, onSelectOptio
         display: 'flex',
         alignItems: 'center',
         gap: 12,
+        justifyContent: 'space-between',
         borderRadius: 'var(--radius-md)',
         border: `1px solid ${borderColor}`,
         background,
@@ -73,27 +78,45 @@ function QuizOption({ option, accent, quizAnswered, quizSelection, onSelectOptio
         boxShadow: showCorrect || isWrongSelection ? 'var(--shadow-sm)' : 'none',
       }}
     >
-      <span
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: '50%',
-          background: showCorrect ? accent : isWrongSelection ? 'var(--fr)' : 'var(--bg-2)',
-          color: showCorrect || isWrongSelection ? 'var(--surface)' : 'var(--text-2)',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 12,
-          fontWeight: 700,
-          flexShrink: 0,
-        }}
-      >
-        {option.letter}
+      <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+        <span
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 10,
+            background: showCorrect ? accent : isWrongSelection ? 'var(--fr)' : 'var(--bg-2)',
+            color: showCorrect || isWrongSelection ? 'var(--surface)' : 'var(--text-2)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 12,
+            fontWeight: 700,
+            flexShrink: 0,
+            boxShadow: showCorrect || isWrongSelection ? '0 10px 18px rgba(0,0,0,0.12)' : 'inset 0 1px 0 rgba(255,255,255,0.06)',
+          }}
+        >
+          {option.letter}
+        </span>
+
+        <span style={{ fontSize: 14, lineHeight: 1.45, color: textColor, minWidth: 0 }}>
+          {option.label}
+        </span>
       </span>
 
-      <span style={{ fontSize: 14, lineHeight: 1.45, color: textColor }}>
-        {option.label}
-      </span>
+      {feedbackLabel && (
+        <span
+          style={{
+            flexShrink: 0,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: showCorrect ? accent : 'var(--fr)',
+          }}
+        >
+          {feedbackLabel}
+        </span>
+      )}
     </motion.button>
   )
 }
@@ -199,9 +222,10 @@ export default function WordCard({
   const notebookSummary = word ? getNotebookSummary(word) : ''
   const showQuiz = quizMode && quizQuestion && !quizCompleted
   const showNotebook = notebookMode && !showQuiz && !quizCompleted
+  const wordKicker = track === 'sociologia' ? 'Conceito do dia' : 'Palavra do dia'
 
   return (
-    <div style={{ perspective: '1200px', width: '100%', margin: '16px 0 24px' }}>
+    <div className="word-card-shell" style={{ perspective: '1200px' }}>
       <motion.div
         style={{ position: 'relative', width: '100%', transformStyle: 'preserve-3d' }}
         initial={{ rotateY: 180 }}
@@ -233,6 +257,8 @@ export default function WordCard({
             }}
           />
 
+          <div className="word-card-ornament" aria-hidden="true" />
+
           <div
             style={{
               display: 'flex',
@@ -255,11 +281,12 @@ export default function WordCard({
             >
               {trackLabel}
             </span>
-            <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{formatDate(dateStr)}</span>
+            <span className="word-card-date">{formatDate(dateStr)}</span>
           </div>
 
           <AnimatePresence mode="wait">
             <motion.div
+              className="word-card-main"
               key={`${word?.id ?? 'quiz'}-${quizCompleted ? 'done' : 'active'}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -270,6 +297,10 @@ export default function WordCard({
                 <QuizSummary quizScore={quizScore} quizTotal={quizTotal} />
               ) : showQuiz ? (
                 <motion.div style={{ marginBottom: 12 }} {...fadeUp(0.18)}>
+                  <motion.p className="word-card-kicker" {...fadeUp(0.02)}>
+                    {track === 'sociologia' ? 'Quiz final' : 'Quiz rapido'}
+                  </motion.p>
+
                   <motion.h1
                     style={{
                       fontFamily: 'var(--font-serif)',
@@ -285,55 +316,49 @@ export default function WordCard({
                     Desafio do dia
                   </motion.h1>
 
+                  <motion.p className="quiz-intro-copy" {...fadeUp(0.06)}>
+                    {track === 'sociologia'
+                      ? 'Uma pergunta por conceito, em ordem aleatoria.'
+                      : 'Quatro alternativas para validar a palavra atual.'}
+                  </motion.p>
+
                   {quizProgress?.total > 1 && (
                     <motion.div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '6px 10px',
-                        borderRadius: 99,
-                        background: 'var(--accent-light)',
-                        color: accent,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
-                        marginBottom: 22,
-                      }}
+                      className="quiz-progress-strip"
                       {...fadeUp(0.08)}
                     >
-                      Pergunta {quizProgress.current} de {quizProgress.total}
+                      <span className="quiz-progress-copy">
+                        Pergunta {quizProgress.current} de {quizProgress.total}
+                      </span>
+                      <span className="quiz-progress-dots" aria-hidden="true">
+                        {Array.from({ length: quizProgress.total }).map((_, index) => (
+                          <span
+                            key={index}
+                            className={`quiz-progress-dot ${index < quizProgress.current ? 'active' : ''}`}
+                          />
+                        ))}
+                      </span>
                     </motion.div>
                   )}
 
                   <motion.div
-                    style={{ height: 1, background: 'var(--border)', marginBottom: 22 }}
+                    className="word-card-rule"
                     {...fadeUp(0.14)}
                   />
 
-                  <div style={{ marginBottom: 18 }}>
-                    <p
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 600,
-                        letterSpacing: '0.12em',
-                        textTransform: 'uppercase',
-                        color: 'var(--accent)',
-                        marginBottom: 7,
-                      }}
-                    >
+                  <div className="quiz-question-block">
+                    <p className="card-section-label word-card-section-label">
                       Pergunta
                     </p>
-                    <p style={{ fontSize: 18, lineHeight: 1.45, color: 'var(--text-1)', marginBottom: 10 }}>
+                    <p className="quiz-question-title">
                       {quizQuestion.question}
                     </p>
-                    <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text-2)' }}>
+                    <p className="quiz-question-prompt">
                       {quizQuestion.prompt}
                     </p>
                   </div>
 
-                  <div style={{ display: 'grid', gap: 10 }}>
+                  <div className="quiz-option-grid">
                     {quizQuestion.options.map((option) => (
                       <QuizOption
                         key={option.id}
@@ -348,37 +373,35 @@ export default function WordCard({
 
                   {quizAnswered && selectedOption && (
                     <motion.div
+                      className="quiz-feedback"
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2 }}
                       style={{
-                        marginTop: 16,
-                        padding: '14px 16px',
-                        borderRadius: 'var(--radius-md)',
                         background: selectedOption.isCorrect ? 'var(--accent-light)' : 'var(--fr-light)',
-                        border: `1px solid ${selectedOption.isCorrect ? accent : 'var(--fr)'}`,
+                        borderColor: selectedOption.isCorrect ? accent : 'var(--fr)',
                       }}
                     >
-                      <p
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: selectedOption.isCorrect ? accent : 'var(--fr)',
-                          marginBottom: 4,
-                        }}
-                      >
+                      <p className="quiz-feedback-title" style={{ color: selectedOption.isCorrect ? accent : 'var(--fr)' }}>
                         {selectedOption.isCorrect ? 'Acertou.' : 'Quase.'}
                       </p>
-                      <p style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text-2)' }}>
+                      <p className="quiz-feedback-copy">
                         {selectedOption.isCorrect
                           ? `A resposta certa era ${word.word}.`
                           : `A correta era ${word.word}.`}
+                      </p>
+                      <p className="quiz-feedback-copy quiz-feedback-copy-muted">
+                        {word.definition}
                       </p>
                     </motion.div>
                   )}
                 </motion.div>
               ) : (
                 <>
+                  <motion.p className="word-card-kicker" {...fadeUp(0.02)}>
+                    {wordKicker}
+                  </motion.p>
+
                   <motion.h1
                     style={{
                       fontFamily: 'var(--font-serif)',
@@ -415,59 +438,26 @@ export default function WordCard({
 
                   {!showNotebook && (
                     <motion.div
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}
+                      className="word-card-detail-strip"
                       {...fadeUp(0.1)}
                     >
-                      <span
-                        style={{
-                          fontFamily: 'var(--font-serif)',
-                          fontStyle: 'italic',
-                          fontSize: 15,
-                          color: 'var(--text-2)',
-                          fontWeight: 300,
-                        }}
-                      >
+                      <span className="word-card-pronunciation">
                         {word.pronunciation}
                       </span>
-                      <span
-                        style={{
-                          width: 3,
-                          height: 3,
-                          borderRadius: '50%',
-                          background: 'var(--text-3)',
-                          flexShrink: 0,
-                        }}
-                      />
-                      <span style={{ fontSize: 12, color: 'var(--text-3)' }}>{word.etymology}</span>
+                      <span className="word-card-detail-dot" />
+                      <span className="word-card-etymology">{word.etymology}</span>
                     </motion.div>
                   )}
 
                   <motion.div
-                    style={{ height: 1, background: 'var(--border)', marginBottom: 22 }}
+                    className="word-card-rule"
                     {...fadeUp(0.14)}
                   />
 
                   {showNotebook ? (
-                    <motion.div style={{ marginBottom: 8 }} {...fadeUp(0.18)}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 12,
-                          marginBottom: 12,
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <p
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 600,
-                            letterSpacing: '0.12em',
-                            textTransform: 'uppercase',
-                            color: 'var(--accent)',
-                          }}
-                        >
+                    <motion.div className="notebook-panel" {...fadeUp(0.18)}>
+                      <div className="notebook-panel-head">
+                        <p className="card-section-label word-card-section-label">
                           Modo caderno
                         </p>
 
@@ -475,66 +465,33 @@ export default function WordCard({
                           type="button"
                           onClick={() => setNotebookExpanded((current) => !current)}
                           whileTap={{ scale: 0.97 }}
-                          style={{
-                            border: `1px solid ${notebookExpanded ? 'var(--accent)' : 'var(--border)'}`,
-                            background: notebookExpanded ? 'var(--accent-light)' : 'transparent',
-                            color: notebookExpanded ? 'var(--accent)' : 'var(--text-2)',
-                            borderRadius: 99,
-                            padding: '6px 12px',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            transition: 'all 160ms ease',
-                          }}
+                          className={`notebook-toggle ${notebookExpanded ? 'active' : ''}`}
                         >
                           {notebookExpanded ? 'Fechar explicacao' : 'Ver explicacao completa'}
                         </motion.button>
                       </div>
 
-                      <p style={{ fontSize: 18, lineHeight: 1.7, color: 'var(--text-1)', marginBottom: notebookExpanded ? 16 : 8 }}>
+                      <p className="notebook-summary" style={{ marginBottom: notebookExpanded ? 16 : 8 }}>
                         {notebookSummary}
                       </p>
 
                       {notebookExpanded && (
                         <motion.div
+                          className="notebook-expanded"
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.22 }}
                         >
-                          <div
-                            style={{
-                              padding: '16px 18px',
-                              borderRadius: 'var(--radius-md)',
-                              background: 'var(--bg-2)',
-                              border: '1px solid var(--border)',
-                              marginBottom: 14,
-                            }}
-                          >
-                            <p className="card-section-label">Explicacao</p>
-                            <p style={{ fontSize: 14, lineHeight: 1.75, color: 'var(--text-1)' }}>
+                          <div className="notebook-detail-card notebook-detail-card-muted">
+                            <p className="card-section-label word-card-section-label">Explicacao</p>
+                            <p className="notebook-detail-copy">
                               {word.definition}
                             </p>
                           </div>
 
-                          <div
-                            style={{
-                              padding: '16px 18px',
-                              borderRadius: 'var(--radius-md)',
-                              background: 'var(--surface)',
-                              border: '1px solid var(--border)',
-                            }}
-                          >
-                            <p className="card-section-label">Exemplo</p>
-                            <p
-                              style={{
-                                fontFamily: 'var(--font-serif)',
-                                fontStyle: 'italic',
-                                fontSize: 14,
-                                lineHeight: 1.7,
-                                color: 'var(--text-2)',
-                                fontWeight: 300,
-                              }}
-                            >
+                          <div className="notebook-detail-card">
+                            <p className="card-section-label word-card-section-label">Exemplo</p>
+                            <p className="notebook-example-copy">
                               {word.example}
                             </p>
                           </div>
@@ -543,27 +500,16 @@ export default function WordCard({
                     </motion.div>
                   ) : (
                     <>
-                      <motion.div style={{ marginBottom: 20 }} {...fadeUp(0.18)}>
-                        <p className="card-section-label">Definicao</p>
-                        <p style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--text-1)' }}>
+                      <motion.div className="word-card-definition-block" {...fadeUp(0.18)}>
+                        <p className="card-section-label word-card-section-label">Definicao</p>
+                        <p className="word-card-definition-copy">
                           {word.definition}
                         </p>
                       </motion.div>
 
-                      <motion.div style={{ marginBottom: 8 }} {...fadeUp(0.24)}>
-                        <p className="card-section-label">Exemplo</p>
-                        <p
-                          style={{
-                            fontFamily: 'var(--font-serif)',
-                            fontStyle: 'italic',
-                            fontSize: 15,
-                            lineHeight: 1.7,
-                            color: 'var(--text-2)',
-                            fontWeight: 300,
-                            paddingLeft: 16,
-                            borderLeft: '2px solid var(--border-strong)',
-                          }}
-                        >
+                      <motion.div className="word-card-example-block" {...fadeUp(0.24)}>
+                        <p className="card-section-label word-card-section-label">Em contexto</p>
+                        <p className="word-card-example-copy">
                           {word.example}
                         </p>
                       </motion.div>
@@ -574,6 +520,7 @@ export default function WordCard({
 
               {!quizCompleted && (
                 <motion.div
+                  className="word-card-footer"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -654,7 +601,7 @@ export default function WordCard({
                 userSelect: 'none',
               }}
             >
-              P
+              PP
             </span>
             <span
               style={{

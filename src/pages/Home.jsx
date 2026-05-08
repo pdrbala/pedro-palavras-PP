@@ -7,6 +7,7 @@ import {
   sociologiaWordsCompact as sociologiaWords,
   frenchWords,
   russianWords,
+  getTodayStr,
   getStudyWordOfDay,
   getQuizQuestion,
 } from '../data/words'
@@ -25,22 +26,12 @@ function shuffleItems(items) {
 function ToggleChip({ active, disabled = false, label, onClick }) {
   return (
     <motion.button
+      type="button"
+      className={`mode-chip ${active ? 'active' : ''}`}
       onClick={disabled ? undefined : onClick}
+      whileHover={disabled ? undefined : { y: -1 }}
       whileTap={disabled ? undefined : { scale: 0.96 }}
-      style={{
-        background: active ? 'var(--accent-light)' : 'none',
-        border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-        borderRadius: 'var(--radius-sm)',
-        padding: '4px 11px',
-        fontSize: 11,
-        fontFamily: 'var(--font-sans)',
-        fontWeight: 500,
-        color: active ? 'var(--accent)' : 'var(--text-3)',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.45 : 1,
-        transition: 'all 150ms',
-        letterSpacing: '0.04em',
-      }}
+      disabled={disabled}
     >
       {label}
     </motion.button>
@@ -52,6 +43,7 @@ export default function Home({
   setTrack,
   wordStatus,
   onMarkWord,
+  currentStreak,
   focusMode,
   setFocusMode,
 }) {
@@ -64,13 +56,14 @@ export default function Home({
   const [sociologyQuizIndex, setSociologyQuizIndex] = useState(0)
   const [sociologyQuizScore, setSociologyQuizScore] = useState(0)
   const [sociologyQuizCompleted, setSociologyQuizCompleted] = useState(false)
+  const [todayKey, setTodayKey] = useState(() => getTodayStr())
 
   const words =
     track === 'sociologia' ? sociologiaWords :
     track === 'russo' ? russianWords :
     frenchWords
 
-  const { word: studyWord, dateStr, remaining, reviewCount, source } = getStudyWordOfDay(words, wordStatus)
+  const { word: studyWord, dateStr, remaining, reviewCount, source } = getStudyWordOfDay(words, wordStatus, todayKey)
   const studyStatus = wordStatus[studyWord?.id] ?? null
   const isSociology = track === 'sociologia'
   const allKnown = remaining === 0
@@ -86,6 +79,16 @@ export default function Home({
       onMarkWord(studyWord.id, track, 'seen')
     }
   }, [studyWord?.id, track])
+
+  useEffect(() => {
+    const now = new Date()
+    const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1)
+    const timer = window.setTimeout(() => {
+      setTodayKey(getTodayStr())
+    }, Math.max(1000, nextDay.getTime() - now.getTime()))
+
+    return () => window.clearTimeout(timer)
+  }, [todayKey])
 
   useEffect(() => {
     if (quizMode && sociologyQuizLocked) {
@@ -167,9 +170,17 @@ export default function Home({
   const quizProgress = isSociologyFinalQuiz && sociologyQuizDeck.length > 0
     ? { current: Math.min(sociologyQuizIndex + 1, sociologyQuizDeck.length), total: sociologyQuizDeck.length }
     : null
+  const modeSummary =
+    quizMode
+      ? isSociologyFinalQuiz
+        ? 'Perguntas aleatorias para fechar a trilha.'
+        : 'Uma pergunta A-D para validar a palavra atual.'
+      : notebookMode
+        ? 'Resumo curto para copiar com abertura da explicacao completa.'
+        : 'Fluxo padrao com leitura, exemplo e marcacao rapida.'
 
   return (
-    <div className="page">
+    <div className="page home-page">
       <AnimatePresence>
         {!focusMode && (
           <motion.div
@@ -186,105 +197,79 @@ export default function Home({
         <AnimatePresence>
           {!focusMode && (
             <motion.div
+              className="home-status-panel"
               initial={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
             >
               <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 4,
-                  gap: 12,
-                  flexWrap: 'wrap',
-                }}
+                className="home-topline"
               >
-                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
-                  {knownCount} de {totalWords} palavras dominadas
-                </span>
+                <div className="home-topline-meta">
+                  <div className="home-progress-copy">
+                    <span className="home-progress-kicker">Progresso da trilha</span>
+                    <div className="home-progress-numbers">
+                      <span className="home-progress-current">{knownCount}</span>
+                      <span className="home-progress-total">/ {totalWords}</span>
+                      <span className="home-progress-caption">dominadas</span>
+                      {allKnown && (
+                        <span className="home-inline-pill">Trilha completa</span>
+                      )}
+                    </div>
+                  </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  {source === 'review' && !allKnown && (
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: 'var(--accent)',
-                        background: 'var(--accent-light)',
-                        padding: '3px 9px',
-                        borderRadius: 99,
-                      }}
+                  {currentStreak > 0 && (
+                    <motion.div
+                      className="streak-chip"
+                      key={`${track}-${currentStreak}`}
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 340, damping: 28 }}
                     >
-                      Revisao primeiro
-                    </span>
+                      <span className="streak-chip-orb" aria-hidden="true" />
+                      <span className="streak-chip-value">{currentStreak}</span>
+                      <span className="streak-chip-label">dias seguidos</span>
+                    </motion.div>
                   )}
-
-                  {allKnown && (
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: 'var(--accent)',
-                        background: 'var(--accent-light)',
-                        padding: '3px 9px',
-                        borderRadius: 99,
-                      }}
-                    >
-                      Trilha completa
-                    </span>
-                  )}
-
-                  <ToggleChip
-                    active={notebookMode}
-                    label="Caderno"
-                    onClick={() => setNotebookMode((current) => !current)}
-                  />
-                  <ToggleChip
-                    active={quizMode}
-                    disabled={sociologyQuizLocked}
-                    label={quizMode ? '<- Normal' : quizButtonLabel}
-                    onClick={handleQuizToggle}
-                  />
                 </div>
               </div>
 
-              <div
-                style={{
-                  height: 3,
-                  background: 'var(--border)',
-                  borderRadius: 99,
-                  marginBottom: 6,
-                  overflow: 'hidden',
-                }}
-              >
+              <div className="home-progress-track">
                 <motion.div
-                  style={{ height: '100%', background: 'var(--accent)', borderRadius: 99 }}
+                  className="home-progress-fill"
                   initial={{ width: 0 }}
                   animate={{ width: `${(knownCount / totalWords) * 100}%` }}
                   transition={{ delay: 0.4, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 />
               </div>
 
-              {!allKnown && (
-                <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 2 }}>
-                  {reviewCount > 0
-                    ? `${reviewCount} em revisao entram antes das novas`
-                    : 'As novas palavras continuam entrando na rotacao diaria'}
-                </p>
-              )}
+              <div className="home-status-notes">
+                {source === 'review' && !allKnown && (
+                  <p className="home-status-note home-status-note-strong">
+                    Revisao primeiro antes das novas.
+                  </p>
+                )}
 
-              {isSociology && sociologyQuizLocked && (
-                <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 2 }}>
-                  O quiz final de sociologia libera quando os 5 conceitos estiverem concluidos.
-                </p>
-              )}
+                {!allKnown && (
+                  <p className="home-status-note">
+                    {reviewCount > 0
+                      ? `${reviewCount} em revisao entram antes das novas`
+                      : 'As novas palavras continuam entrando na rotacao diaria'}
+                  </p>
+                )}
 
-              {!quizMode && notebookMode && (
-                <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 2 }}>
-                  Modo caderno mostra resumo curto com botao para abrir a explicacao completa.
-                </p>
-              )}
+                {isSociology && sociologyQuizLocked && (
+                  <p className="home-status-note">
+                    O quiz final de sociologia libera quando os 5 conceitos estiverem concluidos.
+                  </p>
+                )}
+
+                {!quizMode && notebookMode && (
+                  <p className="home-status-note">
+                    Modo caderno mostra resumo curto com botao para abrir a explicacao completa.
+                  </p>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -315,149 +300,163 @@ export default function Home({
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.22 }}
             >
-              <AnimatePresence mode="wait">
-                {quizMode ? (
-                  isSociologyFinalQuiz ? (
-                    <motion.div
-                      key="sociology-final-quiz"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}
-                    >
-                      <p style={{ fontSize: 12, color: 'var(--text-2)', textAlign: 'center' }}>
-                        {sociologyQuizCompleted
-                          ? `Quiz finalizado: ${sociologyQuizScore} de ${sociologyQuizDeck.length}.`
-                          : `Pergunta ${sociologyQuizIndex + 1} de ${sociologyQuizDeck.length}.`}
-                      </p>
+              <div className="action-dock">
+                <div className="action-dock-top">
+                  <div className="home-mode-bar">
+                    <ToggleChip
+                      active={notebookMode}
+                      label="Caderno"
+                      onClick={() => setNotebookMode((current) => !current)}
+                    />
+                    <ToggleChip
+                      active={quizMode}
+                      disabled={sociologyQuizLocked}
+                      label={quizMode ? '<- Normal' : quizButtonLabel}
+                      onClick={handleQuizToggle}
+                    />
+                  </div>
 
-                      <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-                        <motion.button
-                          className="btn btn-ghost"
-                          whileHover={{ scale: 0.98 }}
-                          whileTap={{ scale: 0.96 }}
-                          transition={{ duration: 0.12 }}
-                          onClick={() => setQuizMode(false)}
-                          style={{ flex: 1 }}
-                        >
-                          Voltar
-                        </motion.button>
+                  <p className="action-dock-note">{modeSummary}</p>
+                </div>
 
-                        <motion.button
-                          className="btn btn-primary"
-                          whileHover={sociologyQuizCompleted || quizAnswered ? { scale: 0.98 } : undefined}
-                          whileTap={sociologyQuizCompleted || quizAnswered ? { scale: 0.96 } : undefined}
-                          transition={{ duration: 0.12 }}
-                          onClick={sociologyQuizCompleted ? handleRestartSociologyQuiz : handleAdvanceSociologyQuiz}
-                          disabled={!sociologyQuizCompleted && !quizAnswered}
-                          style={{
-                            flex: 1,
-                            background: 'var(--accent)',
-                            borderColor: 'transparent',
-                            ...(!sociologyQuizCompleted && !quizAnswered ? { opacity: 0.35, cursor: 'not-allowed' } : {}),
-                          }}
-                        >
+                <AnimatePresence mode="wait">
+                  {quizMode ? (
+                    isSociologyFinalQuiz ? (
+                      <motion.div
+                        key="sociology-final-quiz"
+                        className="action-stack"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        <p className="action-helper">
                           {sociologyQuizCompleted
-                            ? 'Refazer quiz'
-                            : lastSociologyQuestion
-                              ? 'Finalizar quiz'
-                              : 'Proxima pergunta'}
-                        </motion.button>
-                      </div>
-                    </motion.div>
+                            ? `Quiz finalizado: ${sociologyQuizScore} de ${sociologyQuizDeck.length}.`
+                            : `Pergunta ${sociologyQuizIndex + 1} de ${sociologyQuizDeck.length}.`}
+                        </p>
+
+                        <div className="action-row">
+                          <motion.button
+                            className="btn btn-ghost"
+                            whileHover={{ scale: 0.98 }}
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ duration: 0.12 }}
+                            onClick={() => setQuizMode(false)}
+                            style={{ flex: 1 }}
+                          >
+                            Voltar
+                          </motion.button>
+
+                          <motion.button
+                            className="btn btn-primary"
+                            whileHover={sociologyQuizCompleted || quizAnswered ? { scale: 0.98 } : undefined}
+                            whileTap={sociologyQuizCompleted || quizAnswered ? { scale: 0.96 } : undefined}
+                            transition={{ duration: 0.12 }}
+                            onClick={sociologyQuizCompleted ? handleRestartSociologyQuiz : handleAdvanceSociologyQuiz}
+                            disabled={!sociologyQuizCompleted && !quizAnswered}
+                            style={{
+                              flex: 1,
+                              background: 'var(--accent)',
+                              borderColor: 'transparent',
+                              ...(!sociologyQuizCompleted && !quizAnswered ? { opacity: 0.35, cursor: 'not-allowed' } : {}),
+                            }}
+                          >
+                            {sociologyQuizCompleted
+                              ? 'Refazer quiz'
+                              : lastSociologyQuestion
+                                ? 'Finalizar quiz'
+                                : 'Proxima pergunta'}
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="quiz-actions"
+                        className="action-stack"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        <p className="action-helper">
+                          {!quizAnswered
+                            ? 'Escolha uma alternativa A, B, C ou D na carta.'
+                            : quizSuggestedStatus === 'known'
+                              ? 'Acertou. Confirme abaixo se quer marcar como "Ja sei".'
+                              : 'Errou. Confirme abaixo se quer marcar como "Revisar depois".'}
+                        </p>
+
+                        <div className="action-row">
+                          <motion.button
+                            className="btn btn-ghost"
+                            whileHover={quizAnswered ? { scale: 0.98 } : undefined}
+                            whileTap={quizAnswered ? { scale: 0.96 } : undefined}
+                            transition={{ duration: 0.12 }}
+                            onClick={() => markWord('review')}
+                            disabled={!quizAnswered}
+                            style={{
+                              flex: 1,
+                              ...((activeStatus === 'review' || (!activeStatus || activeStatus === 'seen') && quizSuggestedStatus === 'review')
+                                ? { borderColor: 'var(--fr)', color: 'var(--fr)' }
+                                : {}),
+                              ...(!quizAnswered ? { opacity: 0.35, cursor: 'not-allowed' } : {}),
+                            }}
+                          >
+                            Revisar depois
+                          </motion.button>
+
+                          <motion.button
+                            className="btn btn-primary"
+                            whileHover={quizAnswered ? { scale: 0.98 } : undefined}
+                            whileTap={quizAnswered ? { scale: 0.96 } : undefined}
+                            transition={{ duration: 0.12 }}
+                            onClick={() => markWord('known')}
+                            disabled={!quizAnswered}
+                            style={{
+                              flex: 1,
+                              ...((activeStatus === 'known' || (!activeStatus || activeStatus === 'seen') && quizSuggestedStatus === 'known')
+                                ? { background: 'var(--accent)', borderColor: 'transparent' }
+                                : {}),
+                              ...(!quizAnswered ? { opacity: 0.35, cursor: 'not-allowed' } : {}),
+                            }}
+                          >
+                            Ja sei
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    )
                   ) : (
                     <motion.div
-                      key="quiz-actions"
+                      key="normal-actions"
+                      className="action-row"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}
                     >
-                      <p
-                        style={{
-                          fontSize: 12,
-                          color: quizAnswered ? 'var(--text-2)' : 'var(--text-3)',
-                          textAlign: 'center',
-                        }}
+                      <motion.button
+                        className="btn btn-ghost"
+                        whileHover={{ scale: 0.98 }}
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ duration: 0.12 }}
+                        onClick={() => markWord('review')}
+                        style={activeStatus === 'review' ? { borderColor: 'var(--fr)', color: 'var(--fr)' } : {}}
                       >
-                        {!quizAnswered
-                          ? 'Escolha uma alternativa A, B, C ou D na carta.'
-                          : quizSuggestedStatus === 'known'
-                            ? 'Acertou. Confirme abaixo se quer marcar como "Ja sei".'
-                            : 'Errou. Confirme abaixo se quer marcar como "Revisar depois".'}
-                      </p>
+                        Revisar depois
+                      </motion.button>
 
-                      <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-                        <motion.button
-                          className="btn btn-ghost"
-                          whileHover={quizAnswered ? { scale: 0.98 } : undefined}
-                          whileTap={quizAnswered ? { scale: 0.96 } : undefined}
-                          transition={{ duration: 0.12 }}
-                          onClick={() => markWord('review')}
-                          disabled={!quizAnswered}
-                          style={{
-                            flex: 1,
-                            ...((activeStatus === 'review' || (!activeStatus || activeStatus === 'seen') && quizSuggestedStatus === 'review')
-                              ? { borderColor: 'var(--fr)', color: 'var(--fr)' }
-                              : {}),
-                            ...(!quizAnswered ? { opacity: 0.35, cursor: 'not-allowed' } : {}),
-                          }}
-                        >
-                          Revisar depois
-                        </motion.button>
-
-                        <motion.button
-                          className="btn btn-primary"
-                          whileHover={quizAnswered ? { scale: 0.98 } : undefined}
-                          whileTap={quizAnswered ? { scale: 0.96 } : undefined}
-                          transition={{ duration: 0.12 }}
-                          onClick={() => markWord('known')}
-                          disabled={!quizAnswered}
-                          style={{
-                            flex: 1,
-                            ...((activeStatus === 'known' || (!activeStatus || activeStatus === 'seen') && quizSuggestedStatus === 'known')
-                              ? { background: 'var(--accent)', borderColor: 'transparent' }
-                              : {}),
-                            ...(!quizAnswered ? { opacity: 0.35, cursor: 'not-allowed' } : {}),
-                          }}
-                        >
-                          Ja sei
-                        </motion.button>
-                      </div>
+                      <motion.button
+                        className="btn btn-primary"
+                        whileHover={{ scale: 0.98 }}
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ duration: 0.12 }}
+                        onClick={() => markWord('known')}
+                        style={activeStatus === 'known' ? { background: 'var(--accent)', borderColor: 'transparent' } : {}}
+                      >
+                        Ja sei
+                      </motion.button>
                     </motion.div>
-                  )
-                ) : (
-                  <motion.div
-                    key="normal-actions"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    style={{ display: 'flex', gap: 12, width: '100%' }}
-                  >
-                    <motion.button
-                      className="btn btn-ghost"
-                      whileHover={{ scale: 0.98 }}
-                      whileTap={{ scale: 0.96 }}
-                      transition={{ duration: 0.12 }}
-                      onClick={() => markWord('review')}
-                      style={activeStatus === 'review' ? { borderColor: 'var(--fr)', color: 'var(--fr)' } : {}}
-                    >
-                      Revisar depois
-                    </motion.button>
-
-                    <motion.button
-                      className="btn btn-primary"
-                      whileHover={{ scale: 0.98 }}
-                      whileTap={{ scale: 0.96 }}
-                      transition={{ duration: 0.12 }}
-                      onClick={() => markWord('known')}
-                      style={activeStatus === 'known' ? { background: 'var(--accent)', borderColor: 'transparent' } : {}}
-                    >
-                      Ja sei
-                    </motion.button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

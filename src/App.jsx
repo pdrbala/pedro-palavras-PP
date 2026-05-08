@@ -139,22 +139,18 @@ export default function App() {
         <div className="container">
           <div className="header-inner">
             <span className="logo">
-              Pedro<span className="logo-mark">Palavras</span>
+              <span className="logo-emblem" aria-hidden="true">
+                <span className="logo-emblem-core">PP</span>
+              </span>
+              <span className="logo-copy">
+                <span className="logo-text">
+                  Pedro<span className="logo-mark">Palavras</span>
+                </span>
+                <span className="logo-subtext">1 palavra por dia</span>
+              </span>
             </span>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {currentStreak > 0 && (
-                <motion.div
-                  className="streak-badge"
-                  key={currentStreak}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                >
-                  <span className="streak-fire" aria-hidden="true" />
-                  {currentStreak}
-                </motion.div>
-              )}
               <Navigation page={page} setPage={navigateTo} />
             </div>
           </div>
@@ -177,6 +173,7 @@ export default function App() {
               setTrack={setTrack}
               wordStatus={wordStatus}
               onMarkWord={handleMarkWord}
+              currentStreak={currentStreak}
               focusMode={focusMode}
               setFocusMode={setFocusMode}
             />

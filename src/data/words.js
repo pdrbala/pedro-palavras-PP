@@ -505,24 +505,27 @@ export function getWordOfDay(words, wordStatus = {}) {
   const activePool = pool.length > 0 ? pool : words // fallback: se tudo for known, reusa todas
 
   const dateStr = getTodayStr()
-  let hash = 0
-  for (let i = 0; i < dateStr.length; i++) {
-    hash = (hash << 5) - hash + dateStr.charCodeAt(i)
-    hash |= 0
-  }
-  const index = Math.abs(hash) % activePool.length
+  const index = getDaySerial(dateStr) % activePool.length
   return { word: activePool[index], dateStr, remaining: pool.length }
 }
 
-export function getTodayStr() {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+function formatDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function getDaySerial(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return Math.floor(Date.UTC(year, month - 1, day) / 86400000)
+}
+
+export function getTodayStr(date = new Date()) {
+  return formatDateKey(date)
 }
 
 export function getYesterdayStr() {
   const now = new Date()
   now.setDate(now.getDate() - 1)
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  return formatDateKey(now)
 }
 
 function quizHash(value) {
@@ -558,7 +561,7 @@ function trimQuizPrompt(text) {
   return `${normalized.slice(0, 167).trimEnd()}...`
 }
 
-export function getStudyWordOfDay(words, wordStatus = {}) {
+export function getStudyWordOfDay(words, wordStatus = {}, dateOverride = getTodayStr()) {
   const pendingPool = words.filter((word) => wordStatus[word.id] !== 'known')
   const reviewPool = pendingPool.filter((word) => wordStatus[word.id] === 'review')
   const activePool =
@@ -566,8 +569,8 @@ export function getStudyWordOfDay(words, wordStatus = {}) {
     pendingPool.length > 0 ? pendingPool :
     words
 
-  const dateStr = getTodayStr()
-  const index = quizHash(dateStr) % activePool.length
+  const dateStr = dateOverride
+  const index = getDaySerial(dateStr) % activePool.length
 
   return {
     word: activePool[index],
